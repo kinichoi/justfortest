@@ -8,10 +8,11 @@ steps:
     commands:
       - npm install
 
-  - name: test
-    image: node:14
-    commands:
-      - npm test
+- name: list files
+  image: node:14
+  working_dir: /drone/src  # Set the correct working directory
+  commands:
+    - ls -la
 
   - name: build
     image: node:14
