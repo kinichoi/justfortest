@@ -1,49 +1,29 @@
----
 kind: pipeline
 type: docker
 name: default
 
-platform:
-  os: linux
-  arch: arm64
-
-trigger:
-  event:
-    - tag
-
-clone:
-  depth: 1
-
 steps:
-  - name: build
-    image: node:14.17.6-buster-slim
-    pull: if-not-exists
-    environment:
-      CRX_KEY:
-        from_secret: crx_key
+  - name: install
+    image: node:14
     commands:
       - npm install
+
+  - name: test
+    image: node:14
+    commands:
+      - npm test
+
+  - name: build
+    image: node:14
+    commands:
       - npm run build
-      - npm run crx
-      - tar zcvf dist.tar.gz dist
-      - apt update
-      - apt install zip -y
-      - zip -r dist.zip dist
 
-  - name: publish
-    image: plugins/github-release
+  - name: deploy
+    image: appleboy/scp-action
     settings:
-      api_key:
-        from_secret: github_api_token
-      files:
-        - dist.tar.gz
-        - dist.zip
-        - crx/dist.crx
-      title: ${DRONE_TAG}
-
-  - name: slack-notify
-    image: plugins/slack
-    settings:
-      webhook:
-        from_secret: slack_webhook
-      channel: drone-ci
+      host: your.server.com
+      username: your_username
+      password: your_password
+      port: 22
+      source: "build/*"
+      target: "/path/to/deploy"
